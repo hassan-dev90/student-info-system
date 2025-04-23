@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Information System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .student-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .student-card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .student-card p {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 5px;
+        }
+        .search-results-container {
+            display: none;
+        }
+        .search-results-container.show {
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-outline:hover {
+            background-color: #eff6ff;
+            color: #3b82f6;
+        }
+        .search-history {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            background-color: #f9fafb;
+        }
+        .search-history h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .search-history ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .search-history li {
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            color: #374151;
+        }
+        .export-options {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="container max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8">
+        <h1 class="text-3xl font-semibold text-center text-blue-600 mb-8">Student Information System</h1>
+
+        <div id="searchSection" class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Search Student</h2>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div class="input-group">
+                    <label for="searchStudentId">Student ID:</label>
+                    <input type="text" id="searchStudentId" placeholder="Enter Student ID">
+                </div>
+            </div>
+            <button id="searchButton" onclick="searchStudents()" class="btn-primary mt-4">Search</button>
+        </div>
+
+        <div id="searchResults" class="search-results-container">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Search Results</h2>
+            <div id="studentDetails" class="student-card">
+                <h2>Student Details</h2>
+                <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+                <p><strong>Roll Number:</strong> <span id="rollNumber"></span></p>
+                <p><strong>Class:</strong> <span id="className"></span></p>
+                <p><strong>Section:</strong> <span id="section"></span></p>
+                <p><strong>Date of Birth:</strong> <span id="dateOfBirth"></span></p>
+                <p><strong>Father's Name:</strong> <span id="fathersName"></span></p>
+                <p><strong>Contact Details:</strong> <span id="contactNumber"></span></p>
+                <p><strong>Address:</strong> <span id="address"></span></p>
+                <p><strong>Admission Date:</strong> <span id="admissionDate"></span></p>
+                <p><strong>Fee Status:</strong> <span id="feeStatus"></span></p>
+            </div>
+             <button id="exportPdfButton" onclick="exportStudentDetailsToPDF()" class="btn-outline mt-4">Export to PDF</button>
+        </div>
+
+        <div id="addStudentForm" class="bg-white rounded-lg p-6 mt-8 shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Student</h2>
+            <form>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="newStudentId">Student ID:</label>
+                        <input type="text" id="newStudentId" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newRollNumber">Roll Number:</label>
+                        <input type="text" id="newRollNumber" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newFullName">Full Name:</label>
+                        <input type="text" id="newFullName" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newClass">Class:</label>
+                        <input type="text" id="newClass" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newSection">Section:</label>
+                        <input type="text" id="newSection" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newDateOfBirth">Date of Birth:</label>
+                        <input type="text" id="newDateOfBirth" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newFathersName">Father's Name:</label>
+                        <input type="text" id="newFathersName" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newContactNumber">Contact Number:</label>
+                        <input type="text" id="newContactNumber" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newAddress">Address:</label>
+                        <input type="text" id="newAddress" required>
+                    </div>
+                    <div class="input-group">
+                         <label for="newAdmissionDate">Admission Date:</label>
+                         <input type="text" id="newAdmissionDate" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="newFeeStatus">Fee Status:</label>
+                        <select id="newFeeStatus">
+                            <option value="Unpaid">Unpaid</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="addStudent()" class="btn-primary mt-4">Add Student</button>
+            </form>
+        </div>
+        <div id="searchHistory" class="search-history">
+                <h3>Search History</h3>
+                <ul id="searchHistoryList"></ul>
+            </div>
+            <div class="export-options">
+                <button onclick="exportToCSV()" class="btn-outline">Export to CSV</button>
+                <button onclick="exportToPDF()" class="btn-outline">Export to PDF</button>
+            </div>
+    </div>
+
+    <script>
+        // Dummy student data (replace with your actual data source)
+        const students = [
+        ];
+        let searchHistory = [];
+
+        function displayStudentDetails(student) {
+            document.getElementById("fullName").textContent = student.fullName;
+            document.getElementById("rollNumber").textContent = student.rollNumber;
+            document.getElementById("className").textContent = student.className;
+            document.getElementById("section").textContent = student.section;
+            document.getElementById("dateOfBirth").textContent = student.dateOfBirth;
+            document.getElementById("fathersName").textContent = student.fathersName;
+            document.getElementById("contactNumber").textContent = student.contactNumber;
+            document.getElementById("address").textContent = student.address;
+            document.getElementById("admissionDate").textContent = student.admissionDate;
+            document.getElementById("feeStatus").textContent = student.feeStatus;
+        }
+
+        function searchStudents() {
+            const searchStudentId = document.getElementById("searchStudentId").value.toLowerCase();
+
+            const searchResults = students.filter(student => {
+                return (
+                    student.studentId.toLowerCase().includes(searchStudentId)
+                );
+            });
+
+            const searchResultsDiv = document.getElementById("searchResults");
+            const studentDetailsDiv = document.getElementById("studentDetails");
+
+            if (searchResults.length === 1) {
+                displayStudentDetails(searchResults[0]);
+                searchResultsDiv.classList.add("show");
+                 storeSearchQuery({
+                    studentId: searchResults[0].studentId
+                });
+            } else if (searchResults.length > 1) {
+                alert("Please refine your search to find a specific student.");
+                searchResultsDiv.classList.remove("show");
+            }
+             else {
+                alert("This Student ID does not exist.");
+                searchResultsDiv.classList.remove("show");
+            }
+
+        }
+        function addStudent() {
+            const newStudent = {
+                studentId: document.getElementById("newStudentId").value,
+                rollNumber: document.getElementById("newRollNumber").value,
+                fullName: document.getElementById("newFullName").value,
+                className: document.getElementById("newClass").value,
+                section: document.getElementById("newSection").value,
+                dateOfBirth: document.getElementById("newDateOfBirth").value,
+                fathersName: document.getElementById("newFathersName").value,
+                contactNumber: document.getElementById("newContactNumber").value,
+                address: document.getElementById("newAddress").value,
+                admissionDate:  document.getElementById("newAdmissionDate").value,
+                feeStatus: document.getElementById("newFeeStatus").value,
+            };
+
+            students.push(newStudent);
+            alert("Student added successfully!");
+            clearForm();
+
+        }
+        function clearForm(){
+             document.getElementById("newStudentId").value = "";
+            document.getElementById("newRollNumber").value = "";
+            document.getElementById("newFullName").value = "";
+            document.getElementById("newClass").value = "";
+            document.getElementById("newSection").value = "";
+            document.getElementById("newDateOfBirth").value = "";
+            document.getElementById("newFathersName").value = "";
+            document.getElementById("newContactNumber").value = "";
+            document.getElementById("newAddress").value = "";
+            document.getElementById("newAdmissionDate").value = "";
+            document.getElementById("newFeeStatus").value = "";
+        }
+
+        function storeSearchQuery(query) {
+            searchHistory.push(query);
+            displaySearchHistory();
+        }
+
+        function displaySearchHistory() {
+            const historyList = document.getElementById("searchHistoryList");
+            historyList.innerHTML = "";
+            searchHistory.forEach(query => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `Student ID: ${query.studentId}`;
+                historyList.appendChild(listItem);
+            });
+        }
+        function exportToCSV() {
+            if (searchHistory.length === 0) {
+                alert("No search history to export.");
+                return;
+            }
+
+            let csvContent = "Student ID\n";
+            searchHistory.forEach(item => {
+                csvContent += `${item.studentId}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "search_history.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToPDF() {
+             if (searchHistory.length === 0) {
+                alert("No search history to export.");
+                return;
+            }
+            const element = document.getElementById('searchHistory');
+            const opt = {
+                margin:       10,
+                filename:     'search_history.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        function exportStudentDetailsToPDF() {
+            const element = document.getElementById('studentDetails');
+            const opt = {
+                margin:       10,
+                filename:     'student_details.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+    </script>
+</body>
+</html>
